@@ -1,0 +1,47 @@
+version: '3.8'
+
+services:
+  db:
+    image: mysql:8
+    container_name: mysql-jeu
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: alcatraz_db
+      MYSQL_USER: user
+      MYSQL_PASSWORD: pass
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./docker/init.sql:/docker-entrypoint-initdb.d/init.sql
+
+
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    container_name: pma-jeu
+    restart: always
+    environment:
+      PMA_HOST: db
+      PMA_USER: user
+      PMA_PASSWORD: pass
+    ports:
+      - "8080:80"
+
+  jeu:
+    build: .
+    container_name: jeu-app
+    restart: on-failure
+    depends_on:
+      - db
+    environment:
+      DB_HOST: db
+      DB_PORT: 3306
+      DB_NAME: alcatraz_db
+      DB_USER: user
+      DB_PASS: pass
+    ports:
+      - "8081:8080"
+
+volumes:
+  mysql_data:

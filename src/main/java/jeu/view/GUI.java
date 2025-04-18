@@ -1,19 +1,26 @@
-package jeu;
+package jeu.view;
 import javax.swing.*;
+
+import jeu.controller.Game;
+
 import java.awt.*;
 import java.awt.event.*;
 import java.net.URL;
 
 public class GUI implements ActionListener
 {
-    private Jeu jeu;
+    private Game jeu;
     private JFrame fenetre;
     private JTextField entree;
     private JTextArea texte;
     private JLabel image;
 
-    public GUI(Jeu j) {
+    public GUI(Game j) {
         jeu = j;
+        creerGUI();
+    }
+    
+    public GUI(IHMConsole c) {
         creerGUI();
     }
 
@@ -27,7 +34,7 @@ public class GUI implements ActionListener
     }
 
    public void afficheImage( String nomImage) {
-	   	URL imageURL = this.getClass().getClassLoader().getResource("jeu/images/" + nomImage);
+	    URL imageURL = this.getClass().getClassLoader().getResource("images/" + nomImage);
 	   	if( imageURL != null ) {
         	image.setIcon( new ImageIcon( imageURL ));
             fenetre.pack();

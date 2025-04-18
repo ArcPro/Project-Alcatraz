@@ -1,10 +1,20 @@
-package jeu;
-public class Jeu {
+package jeu.controller;
+
+import java.util.List;
+import jeu.model.Sauvegarde;
+
+
+import jeu.model.Commande;
+import jeu.model.Sortie;
+import jeu.model.Zone;
+import jeu.view.GUI;
+
+public class Game {
 	
     private GUI gui; 
 	private Zone zoneCourante;
     
-    public Jeu() {
+    public Game(String nomUtilisateur) {
         creerCarte();
         gui = null;
     }
@@ -94,4 +104,9 @@ public class Jeu {
     	gui.afficher( "Au revoir...");
     	gui.enable( false);
     }
+
+	public static List<Sauvegarde> getSauvegardes(String username) {
+		// TODO Auto-generated method stub
+		return null;
+	}
 }
