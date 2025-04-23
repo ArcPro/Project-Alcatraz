@@ -19,10 +19,6 @@ public class GUI implements ActionListener
         jeu = j;
         creerGUI();
     }
-    
-    public GUI(IHMConsole c) {
-        creerGUI();
-    }
 
     public void afficher(String s) {
         texte.append(s);
