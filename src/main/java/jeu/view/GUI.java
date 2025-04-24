@@ -82,4 +82,9 @@ public class GUI implements ActionListener
         entree.setText("");
         jeu.traiterCommande( commandeLue);
     }
+
+    public void afficherTemps(String temps) {
+        // À adapter selon ton UI (ex: JLabel dédié)
+        afficher("[TEMPS] " + temps);
+    }
 }

@@ -15,6 +15,7 @@ public class Sauvegarde {
         return nom;
     }
 
+
     public String getZone() {
         return zone;
     }

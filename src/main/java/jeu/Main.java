@@ -1,7 +1,8 @@
 package jeu;
 import java.awt.GraphicsEnvironment;
 
-import jeu.view.IHMConsole;
+import jeu.controller.Game;
+import jeu.view.GUI;
 
 public class Main {
 	public static void main(String[] args) {
@@ -17,13 +18,14 @@ public class Main {
             }
         } else {
             System.out.println("Interface graphique activée.");
-            IHMConsole ihm = new IHMConsole();
+            Game jeu = new Game( "str");
+            GUI gui = new GUI( jeu);
+            jeu.setGUI( gui);
+            jeu.start();
         }
 		//GUI gui = new GUI(home);.
 		
 		//home.setGUI(gui);
-		//Jeu jeu = new Jeu();
-		//GUI gui = new GUI( jeu);
-		//jeu.setGUI( gui);
+
 	}
 }

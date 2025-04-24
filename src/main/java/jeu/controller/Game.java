@@ -2,26 +2,36 @@ package jeu.controller;
 
 import java.util.List;
 import jeu.model.Sauvegarde;
+import java.util.Timer;
+import java.util.TimerTask;
 
-
+import jeu.model.Chrono;
 import jeu.model.Commande;
 import jeu.model.Sortie;
 import jeu.model.Zone;
 import jeu.view.GUI;
 
 public class Game {
-	
+    private Chrono chrono;
     private GUI gui; 
 	private Zone zoneCourante;
+
+
     
     public Game(String nomUtilisateur) {
         creerCarte();
+        this.chrono = new Chrono();
         gui = null;
+
+
     }
 
     public void setGUI( GUI g) { gui = g; afficherMessageDeBienvenue(); }
     
     private void creerCarte() {
+
+
+
         Zone [] zones = new Zone [4];
         zones[0] = new Zone("le couloir", "Couloir.jpg" );
         zones[1] = new Zone("l'escalier", "Escalier.jpg" );
@@ -35,6 +45,9 @@ public class Game {
         zones[1].ajouteSortie(Sortie.SUD, zones[3]);
         zoneCourante = zones[1]; 
     }
+
+
+
 
     private void afficherLocalisation() {
             gui.afficher( zoneCourante.descriptionLongue());
@@ -71,7 +84,10 @@ public class Game {
         case "Q" : case "QUITTER" :
         	terminer();
         	break;
-       	default : 
+        case "TEMPS":  // Nouvelle commande pour afficher le temps
+            afficherTempsRestant();
+            break;
+       	default :
             gui.afficher("Commande inconnue");
             break;
         }
@@ -109,4 +125,32 @@ public class Game {
 		// TODO Auto-generated method stub
 		return null;
 	}
+
+    private void afficherTempsRestant() {
+        int minutes = chrono.getTempsRestant() / 60;
+        int secondes = chrono.getTempsRestant() % 60;
+        gui.afficher(String.format("Temps restant : %02d:%02d", minutes, secondes));
+    }
+
+    // Appeler cette méthode pour démarrer le timer quand la partie commence
+    public void start() {
+        new Timer().scheduleAtFixedRate(new TimerTask() {
+            @Override
+            public void run() {
+                if (chrono.getTempsRestant() <= 0) {
+                    gameOver("Temps écoulé ! Les gardiens vous ont capturé.");
+                    this.cancel();
+                } else {
+                    chrono.reduireTemps();
+                }
+            }
+        }, 1000, 1000);  // Démarrer après 1s, répéter toutes les 1s
+    }
+
+    private void gameOver(String message) {
+        gui.afficher(message);
+        gui.enable(false);
+    }
 }
+
+
