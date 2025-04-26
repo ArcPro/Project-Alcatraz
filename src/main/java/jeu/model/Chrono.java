@@ -8,7 +8,7 @@ public class Chrono {
 
     private Timer timer;
     private int tempsRestant;
-    public final static int TEMPS_MAX_SEC = 900;
+    public final static int TEMPS_MAX_SEC = 100;
 
     public Chrono(int temps) {
         this.timer = new Timer();
