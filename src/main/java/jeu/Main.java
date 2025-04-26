@@ -21,7 +21,7 @@ public class Main {
             Game jeu = new Game( "str");
             GUI gui = new GUI( jeu);
             jeu.setGUI( gui);
-            jeu.start();
+
         }
 		//GUI gui = new GUI(home);.
 		

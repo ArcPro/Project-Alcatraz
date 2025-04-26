@@ -4,6 +4,7 @@ public class Sauvegarde {
     private String nom;
     private String zone;
     private String infos;
+    private int chrono;
 
     public Sauvegarde(String nom, String zone, String infos) {
         this.nom = nom;
@@ -14,6 +15,9 @@ public class Sauvegarde {
     public String getNom() {
         return nom;
     }
+
+    public int getChrono() { return chrono; }
+
 
 
     public String getZone() {

@@ -4,7 +4,7 @@ import java.util.List;
 import jeu.model.Sauvegarde;
 import java.util.Timer;
 import java.util.TimerTask;
-
+import javax.swing.SwingUtilities;
 import jeu.model.Chrono;
 import jeu.model.Commande;
 import jeu.model.Sortie;
@@ -15,12 +15,16 @@ public class Game {
     private Chrono chrono;
     private GUI gui; 
 	private Zone zoneCourante;
+    private Sauvegarde sauvegarde;
 
 
-    
+
+
+
     public Game(String nomUtilisateur) {
         creerCarte();
         this.chrono = new Chrono();
+        demarrerChrono();
         gui = null;
 
 
@@ -29,6 +33,9 @@ public class Game {
     public void setGUI( GUI g) { gui = g; afficherMessageDeBienvenue(); }
     
     private void creerCarte() {
+
+
+
 
 
 
@@ -132,24 +139,36 @@ public class Game {
         gui.afficher(String.format("Temps restant : %02d:%02d", minutes, secondes));
     }
 
-    // Appeler cette méthode pour démarrer le timer quand la partie commence
-    public void start() {
-        new Timer().scheduleAtFixedRate(new TimerTask() {
+
+
+
+    private void demarrerChrono() {
+        Timer timer = new Timer();
+        timer.scheduleAtFixedRate(new TimerTask() {
             @Override
             public void run() {
-                if (chrono.getTempsRestant() <= 0) {
-                    gameOver("Temps écoulé ! Les gardiens vous ont capturé.");
-                    this.cancel();
-                } else {
-                    chrono.reduireTemps();
+                chrono.reduireTemps();
+                int temps = chrono.getTempsRestant();
+
+                // Mise à jour UI (thread-safe)
+                SwingUtilities.invokeLater(() -> {
+                    gui.afficherTemps(formatTemps(temps));
+                });
+
+                if (temps <= 0) {
+                    timer.cancel();
+                    gameOver();
                 }
             }
-        }, 1000, 1000);  // Démarrer après 1s, répéter toutes les 1s
+        }, 1000, 1000); // Délai 1s, répété toutes les 1s
     }
 
-    private void gameOver(String message) {
-        gui.afficher(message);
-        gui.enable(false);
+    private String formatTemps(int secondes) {
+        return String.format("%02d:%02d", secondes / 60, secondes % 60);
+    }
+
+    private void gameOver() {
+        gui.afficher("\nTemps écoulé !");
     }
 }
 
