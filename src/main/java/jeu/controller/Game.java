@@ -3,23 +3,31 @@ package jeu.controller;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
+import java.util.Timer;
+import java.util.TimerTask;
+import java.util.concurrent.atomic.AtomicInteger;
+
+import javax.swing.SwingUtilities;
 
 import jeu.model.Sauvegarde;
 import jeu.model.Carte;
+import jeu.model.Chrono;
 import jeu.model.Cle;
 import jeu.model.Commande;
+import jeu.model.Complice;
 import jeu.model.Conteneur;
 import jeu.model.Couteau;
 import jeu.model.Inventaire;
 import jeu.model.Lampe;
 import jeu.model.Objet;
+import jeu.model.Personnage;
 import jeu.model.Plan;
 import jeu.model.Sortie;
 import jeu.model.Zone;
 import jeu.view.GUI;
 
 public class Game {
-	
+    private Chrono chrono;
     private GUI gui; 
 	private Zone zoneCourante;
 	private Conteneur conteneurCourant;
@@ -28,6 +36,8 @@ public class Game {
     public Game(String nomUtilisateur) {
     	inventaire = new Inventaire();
         creerCarte();
+        this.chrono = new Chrono();
+        demarrerChrono();
         gui = null;
     }
 
@@ -56,9 +66,11 @@ public class Game {
         tiroirs.add(Tiroir3);
 
         Conteneur tiroirAleatoire = tiroirs.get(rand.nextInt(tiroirs.size()));
-        tiroirAleatoire.ajouterObjet(lampe);
-
-    	
+        tiroirAleatoire.ajouterObjet(couteau);
+        
+        // Personnages
+        Complice complice = new Complice("Frank");
+                
     	// Zones
         Zone [] zones = new Zone [11];
         zones[0] = new Zone("votre cellule", "Cellule.png" );
@@ -69,7 +81,7 @@ public class Game {
         zones[5] = new Zone("la bibliotheque", "Bibliotheque.png" );
         zones[6] = new Zone("l'infirmerie", "Infirmerie.png" );
         zones[7] = new Zone("la cour", "Cour.png" );
-        zones[8] = new Zone("le couloir des gardiens", "CouloirG.png" );
+        zones[8] = new Zone("le couloir des gardiens", "CouloirG.png", carte);
         zones[9] = new Zone("la chambre du gardien", "Chambre.jpg" );
         zones[10] = new Zone("le ponton", "Pont.png" );
 
@@ -88,6 +100,7 @@ public class Game {
         zones[2].ajouteSortie(Sortie.NORD, zones[7]); // Couloir2 -> Cour
         
         zones[3].ajouteSortie(Sortie.SUD, zones[1]); // Douches -> Couloir
+        zones[3].ajouterPersonnage(complice);
         
         zones[4].ajouteSortie(Sortie.SUD, zones[2]); // Cuisine -> Couloir2
         zones[4].ajouterConteneur(Tiroir1);
@@ -108,7 +121,7 @@ public class Game {
         zones[9].ajouteSortie(Sortie.NORD, zones[10]); // Chambre -> Pont
 
         
-
+        
 
 
        
@@ -240,24 +253,108 @@ public class Game {
     }
 
     private void allerEn(String direction) {
-    	Zone nouvelle = zoneCourante.obtientSortie( direction, inventaire);
-    	if ( nouvelle == null ) {
-        	gui.afficher( "Pas de sortie " + direction);
-    		gui.afficher();
-    	}
-        else {
-        	zoneCourante = nouvelle;
-        	gui.afficher(zoneCourante.descriptionLongue(inventaire));
-        	gui.afficher();
-        	gui.afficheImage(zoneCourante.nomImage());
+        Zone nouvelle = zoneCourante.obtientSortie(direction, inventaire);
+        if (nouvelle == null) {
+            gui.afficher("Pas de sortie " + direction);
+            gui.afficher();
+        } else {
+            zoneCourante = nouvelle;
+            gui.afficher(zoneCourante.descriptionLongue(inventaire));
+            gui.afficher();
+            gui.afficheImage(zoneCourante.nomImage());
+
+            List<Personnage> persos = zoneCourante.getListePersonnage();
+            if (!persos.isEmpty()) {
+                for (Personnage p : persos) {
+                    if (p.quete.status == 0) {
+                        p.quete.status = 1;
+                        afficherDialogueAvecDelai(p);
+                    } else if (p.quete.status == 1) {
+                        System.out.println(inventaire.afficherInventaire());
+                        inventaire.retirerObjet(p.quete.getObjet());
+                        System.out.println(inventaire.afficherInventaire());
+                        inventaire.ajouterObjet(p.quete.getRecompense());
+                        gui.afficher("Vous avez donné un " + p.quete.getObjet().getNom());
+                        gui.afficher();
+                        gui.afficher("Frank : Bravo petit, tiens ta récompense.");
+                        gui.afficher();
+                        gui.afficher("Vous avez récupéré une " + p.quete.getRecompense().getNom());
+                        gui.afficher();
+                        System.out.println(inventaire.afficherInventaire());
+                    }
+                }
+            }
         }
     }
     
+    private void afficherDialogueAvecDelai(Personnage p) {
+        List<String> dialogue = p.dialogue;
+        String nom = p.nom;
+
+        AtomicInteger index = new AtomicInteger(0);  // démarre à 0
+        Timer timer = new Timer();
+
+        timer.scheduleAtFixedRate(new TimerTask() {
+            @Override
+            public void run() {
+                int i = index.get();
+                if (i >= dialogue.size()) {
+                    timer.cancel();  // on stoppe AVANT tout accès hors bornes
+                    return;
+                }
+
+                // On affiche dans le thread Swing
+                SwingUtilities.invokeLater(() -> {
+                    gui.afficher(nom + " : " + dialogue.get(i));
+                    gui.afficher();
+                });
+
+                index.incrementAndGet();  // passe à l’élément suivant
+            }
+        }, 3000, 3000);  // 0ms de délai initial, puis toutes les 1000ms
+    }
+    
+    private void afficherTempsRestant() {
+        int minutes = chrono.getTempsRestant() / 60;
+        int secondes = chrono.getTempsRestant() % 60;
+        gui.afficher(String.format("Temps restant : %02d:%02d", minutes, secondes));
+    }
+
+
+
+    private void demarrerChrono() {
+        Timer timer = new Timer();
+        timer.scheduleAtFixedRate(new TimerTask() {
+            @Override
+            public void run() {
+                chrono.reduireTemps();
+                int temps = chrono.getTempsRestant();
+
+                // Mise à jour UI (thread-safe)
+                SwingUtilities.invokeLater(() -> {
+                    gui.afficherTemps(formatTemps(temps));
+                });
+
+                if (temps <= 0) {
+                    timer.cancel();
+                    gameOver();
+                }
+            }
+        }, 1000, 1000); // Délai 1s, répété toutes les 1s
+    }
+
+    private String formatTemps(int secondes) {
+        return String.format("%02d:%02d", secondes / 60, secondes % 60);
+    }
     private void terminer() {
     	gui.afficher( "Au revoir...");
     	gui.enable( false);
     }
-
+    
+    private void gameOver() {
+        gui.afficher("\nTemps écoulé !");
+    }
+    
 	public static List<Sauvegarde> getSauvegardes(String username) {
 		// TODO Auto-generated method stub
 		return null;

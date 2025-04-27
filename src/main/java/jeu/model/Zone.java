@@ -10,6 +10,7 @@ public class Zone
     private String nomImage;
     private HashMap<String,Zone> sorties;   
     private List<Conteneur> listeConteneurs;
+    private List<Personnage> listePersonnage;
     private Objet objetRequis;
 
     public Zone(String description, String image) {
@@ -17,6 +18,7 @@ public class Zone
         nomImage = image;
         sorties = new HashMap<>();
         listeConteneurs = new ArrayList<>();
+        listePersonnage = new ArrayList<>();
     }
     
     public Zone(String description, String image, Objet o) {
@@ -29,6 +31,10 @@ public class Zone
     
     public void ajouterConteneur(Conteneur c) {
     	listeConteneurs.add(c);
+    }
+    
+    public void ajouterPersonnage(Personnage p) {
+    	listePersonnage.add(p);
     }
 
     public void ajouteSortie(Sortie sortie, Zone zoneVoisine) {
@@ -78,6 +84,10 @@ public class Zone
     
     public List<Conteneur> getListeConteneurs() {
         return listeConteneurs;
+    }
+    
+    public List<Personnage> getListePersonnage() {
+        return listePersonnage;
     }
 }
 
