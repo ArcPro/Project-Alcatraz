@@ -9,5 +9,9 @@ public class Objet {
 		this.description = description;
 	}
 	
+	public String getNom() {
+		return this.nom;
+	}
+	
 	public void utiliser() {}
 }

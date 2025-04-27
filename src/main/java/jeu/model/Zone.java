@@ -1,16 +1,34 @@
 package jeu.model;
 import java.util.HashMap;
+import java.util.List;
+import java.util.stream.Collectors;
+import java.util.ArrayList;
 
 public class Zone 
 {
     private String description;
     private String nomImage;
     private HashMap<String,Zone> sorties;   
+    private List<Conteneur> listeConteneurs;
+    private Objet objetRequis;
 
     public Zone(String description, String image) {
         this.description = description;
         nomImage = image;
         sorties = new HashMap<>();
+        listeConteneurs = new ArrayList<>();
+    }
+    
+    public Zone(String description, String image, Objet o) {
+        this.description = description;
+        nomImage = image;
+        sorties = new HashMap<>();
+        listeConteneurs = new ArrayList<>();
+        this.objetRequis = o;
+    }
+    
+    public void ajouterConteneur(Conteneur c) {
+    	listeConteneurs.add(c);
     }
 
     public void ajouteSortie(Sortie sortie, Zone zoneVoisine) {
@@ -25,16 +43,41 @@ public class Zone
         return description;
     }
 
-    public String descriptionLongue()  {
-        return "Vous êtes dans " + description + "\nSorties : " + sorties();
+    public String descriptionLongue(Inventaire inventaire)  {
+        return "Vous êtes dans " + description + "\nSorties : " + sorties(inventaire) + "\nMeubles : " + voirConteneurs();
     }
 
-    private String sorties() {
-        return sorties.keySet().toString();
+    private String sorties(Inventaire inventaire) {
+        return sorties.entrySet().stream()
+            .filter(entry -> {
+                Zone destination = entry.getValue();
+                Objet objetRequis = destination.objetRequis;
+                return objetRequis == null || inventaire.contient(objetRequis);
+            })
+            .map(entry -> entry.getKey()) // direction (ex: "nord")
+            .collect(Collectors.joining(", "));
     }
 
-    public Zone obtientSortie(String direction) {
-    	return sorties.get(direction);
+    public Zone obtientSortie(String direction, Inventaire inventaire) {
+        Zone zoneCible = sorties.get(direction);
+        if (zoneCible == null) return null;
+
+        Objet requis = zoneCible.objetRequis;
+
+        if (requis == null || inventaire.contient(requis)) {
+            return zoneCible;
+        } else {
+            return null;
+        }
+    }
+    
+    public String voirConteneurs() {
+    	return listeConteneurs.isEmpty() ? "Aucun"
+    		       : listeConteneurs.stream().map(Object::toString).collect(Collectors.joining(", "));
+	}
+    
+    public List<Conteneur> getListeConteneurs() {
+        return listeConteneurs;
     }
 }
 

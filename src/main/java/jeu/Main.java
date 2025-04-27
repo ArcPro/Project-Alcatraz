@@ -22,7 +22,7 @@ public class Main {
 		//GUI gui = new GUI(home);.
 		
 		//home.setGUI(gui);
-		//Jeu jeu = new Jeu();
+		//Game jeu = new Game();
 		//GUI gui = new GUI( jeu);
 		//jeu.setGUI( gui);
 	}

@@ -29,13 +29,20 @@ public class GUI implements ActionListener
         afficher("\n");
     }
 
-   public void afficheImage( String nomImage) {
-	    URL imageURL = this.getClass().getClassLoader().getResource("images/" + nomImage);
-	   	if( imageURL != null ) {
-        	image.setIcon( new ImageIcon( imageURL ));
+    public void afficheImage(String nomImage) {
+        URL imageURL = this.getClass().getClassLoader().getResource("images/" + nomImage);
+        if (imageURL != null) {
+            ImageIcon originalIcon = new ImageIcon(imageURL);
+            Image originalImage = originalIcon.getImage();
+
+            Image scaledImage = originalImage.getScaledInstance(1000, 750, Image.SCALE_SMOOTH);
+
+            image.setIcon(new ImageIcon(scaledImage));
             fenetre.pack();
+        } else {
+            System.out.println("Image introuvable : " + nomImage);
         }
-   }
+    }
 
     public void enable(boolean ok) {
         entree.setEditable(ok);

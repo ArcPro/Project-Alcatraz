@@ -17,4 +17,8 @@ public class Inventaire {
 	public void retirerObjet(Objet o) {
 		this.inventaire.remove(o);
 	}
+	
+	public boolean contient(Objet o) {
+        return inventaire.contains(o);
+    }
 }
