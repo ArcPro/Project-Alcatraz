@@ -11,6 +11,7 @@ import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
 
 import jeu.model.Sauvegarde;
+import jeu.model.MP3Player;
 import jeu.model.Carte;
 import jeu.model.Chrono;
 import jeu.model.Cle;
@@ -25,6 +26,7 @@ import jeu.model.Personnage;
 import jeu.model.Plan;
 import jeu.model.Sortie;
 import jeu.model.Zone;
+import jeu.utils.ResultatAction;
 import jeu.view.GUI;
 import jeu.view.IHMSaves;
 import jeu.view.IHMWin;
@@ -35,13 +37,17 @@ public class Game {
 	private Zone zoneCourante;
 	private Conteneur conteneurCourant;
 	Inventaire inventaire;
+	String nomUtilisateur;
     
     public Game(String nomUtilisateur) {
+    	MP3Player music = new MP3Player();
+        music.playLoop("sound/sound.mp3");
     	inventaire = new Inventaire();
         creerCarte();
         this.chrono = new Chrono();
         demarrerChrono();
         gui = null;
+        this.nomUtilisateur = nomUtilisateur;
     }
 
     public void setGUI( GUI g) { gui = g; afficherMessageDeBienvenue(); }
@@ -188,6 +194,7 @@ public class Game {
         	allerEn( "OUEST"); 
         	break;
         case "Q" : case "QUITTER" :
+        	sauvegarder("Save");
         	terminer();
         	break;
        	default : 
@@ -447,6 +454,15 @@ public class Game {
         gui.afficher("\nTemps écoulé !");
         gui.afficher();
     }
+    
+    public void sauvegarder(String nomSauvegarde) {
+        AuthController.sauvegarderPartie(
+            this.nomUtilisateur, 
+            nomSauvegarde, 
+            zoneCourante.toString() // Pas le temps de faire toutes les variables dans la save.
+        );
+    }
+
     
 	public static List<Sauvegarde> getSauvegardes(String username) {
 		// TODO Auto-generated method stub
