@@ -7,6 +7,7 @@ import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
 
 import jeu.model.Sauvegarde;
@@ -25,6 +26,8 @@ import jeu.model.Plan;
 import jeu.model.Sortie;
 import jeu.model.Zone;
 import jeu.view.GUI;
+import jeu.view.IHMSaves;
+import jeu.view.IHMWin;
 
 public class Game {
     private Chrono chrono;
@@ -68,22 +71,32 @@ public class Game {
         Conteneur tiroirAleatoire = tiroirs.get(rand.nextInt(tiroirs.size()));
         tiroirAleatoire.ajouterObjet(couteau);
         
+        Conteneur bureau = new Conteneur("Bureau");
+        Conteneur bibli = new Conteneur("Bibliothèque");
+        bibli.ajouterObjet(plan);
+
+        
+        Conteneur coffre = new Conteneur("Coffre");
+        coffre.ajouterObjet(cles);
+        
         // Personnages
         Complice complice = new Complice("Frank");
-                
+        
     	// Zones
-        Zone [] zones = new Zone [11];
+        Zone [] zones = new Zone [13];
         zones[0] = new Zone("votre cellule", "Cellule.png" );
         zones[1] = new Zone("le couloir", "Couloir.png");
         zones[2] = new Zone("la suite du couloir", "Couloir2.png" );
         zones[3] = new Zone("les douches", "Douche.png" );
         zones[4] = new Zone("la cuisine", "Cuisine.png" );
+        zones[11] = new Zone("la zone condamnée", "Condamne.png", plan );
         zones[5] = new Zone("la bibliotheque", "Bibliotheque.png" );
         zones[6] = new Zone("l'infirmerie", "Infirmerie.png" );
         zones[7] = new Zone("la cour", "Cour.png" );
         zones[8] = new Zone("le couloir des gardiens", "CouloirG.png", carte);
-        zones[9] = new Zone("la chambre du gardien", "Chambre.jpg" );
+        zones[9] = new Zone("la chambre du gardien", "Chambre.jpg", 2364 );
         zones[10] = new Zone("le ponton", "Pont.png" );
+        zones[12] = new Zone("le bateau", "Pont.png" );
 
         
         zones[0].ajouteSortie(Sortie.NORD, zones[1]); // Cellule -> Couloir
@@ -103,30 +116,29 @@ public class Game {
         zones[3].ajouterPersonnage(complice);
         
         zones[4].ajouteSortie(Sortie.SUD, zones[2]); // Cuisine -> Couloir2
+        zones[4].ajouteSortie(Sortie.OUEST, zones[11]); // Cuisine -> PASSAGE SECRET
         zones[4].ajouterConteneur(Tiroir1);
         zones[4].ajouterConteneur(Tiroir2);
         zones[4].ajouterConteneur(Tiroir3);
         
         zones[5].ajouteSortie(Sortie.SUD, zones[1]); // Bibliotheque -> Couloir
+        zones[5].ajouterConteneur(bureau);
+        zones[5].ajouterConteneur(bibli);
+
         
         zones[6].ajouteSortie(Sortie.SUD, zones[2]); // Infirmerie -> Couloir2
         
         zones[7].ajouteSortie(Sortie.SUD, zones[2]); // Cour -> Couloir2
         zones[7].ajouteSortie(Sortie.NORD, zones[8]); // Cour -> Couloir des gardiens
         
-        zones[8].ajouteSortie(Sortie.SUD, zones[9]); // Couloir des gardiens -> Cour
         zones[8].ajouteSortie(Sortie.NORD, zones[9]); // Couloir des gardiens -> Chambre
 
         zones[9].ajouteSortie(Sortie.SUD, zones[8]); // Chambre -> Couloir
         zones[9].ajouteSortie(Sortie.NORD, zones[10]); // Chambre -> Pont
+        zones[9].ajouterConteneur(coffre);
 
+        zones[10].ajouteSortie(Sortie.NORD, zones[12]); // Pont -> Bateau
         
-        
-
-
-       
-
-
         zoneCourante = zones[0]; 
     }
 
@@ -257,41 +269,90 @@ public class Game {
         if (nouvelle == null) {
             gui.afficher("Pas de sortie " + direction);
             gui.afficher();
-        } else {
-            zoneCourante = nouvelle;
-            gui.afficher(zoneCourante.descriptionLongue(inventaire));
-            gui.afficher();
-            gui.afficheImage(zoneCourante.nomImage());
+            return;
+        }
+        
+        if (nouvelle.getCode() != 0) {
+            String codeSaisi = JOptionPane.showInputDialog(null, 
+                "Un cadenas bloque l'accès... Entrez le code :", 
+                "Code requis", 
+                JOptionPane.QUESTION_MESSAGE);
 
-            List<Personnage> persos = zoneCourante.getListePersonnage();
-            if (!persos.isEmpty()) {
-                for (Personnage p : persos) {
-                    if (p.quete.status == 0) {
-                        p.quete.status = 1;
-                        afficherDialogueAvecDelai(p);
-                    } else if (p.quete.status == 1) {
-                        System.out.println(inventaire.afficherInventaire());
-                        inventaire.retirerObjet(p.quete.getObjet());
-                        System.out.println(inventaire.afficherInventaire());
-                        inventaire.ajouterObjet(p.quete.getRecompense());
-                        gui.afficher("Vous avez donné un " + p.quete.getObjet().getNom());
-                        gui.afficher();
-                        gui.afficher("Frank : Bravo petit, tiens ta récompense.");
-                        gui.afficher();
-                        gui.afficher("Vous avez récupéré une " + p.quete.getRecompense().getNom());
-                        gui.afficher();
-                        System.out.println(inventaire.afficherInventaire());
-                    }
+            if (codeSaisi == null) {
+                gui.afficher("Vous abandonnez.");
+                gui.afficher();
+                return;
+            }
+
+            try {
+                int codeInt = Integer.parseInt(codeSaisi.trim());
+                if (codeInt != nouvelle.getCode()) {
+                    gui.afficher("Mauvais code !");
+                    gui.afficher();
+                    return; 
+                }
+            } catch (NumberFormatException e) {
+                gui.afficher("Code invalide !");
+                gui.afficher();
+                return; 
+            }
+        }
+
+        zoneCourante = nouvelle;
+        if (nouvelle.toString() == "le bateau") {
+        	if (inventaire.contient(new Cle())) {
+        		new IHMWin();
+        	} else {
+        		gui.afficher("Vous n'avez pas la clé du bateau.");
+                gui.afficher();
+        	}
+        }
+        
+        if (nouvelle.toString() == "l'infirmerie") {
+        	if (inventaire.contient(new Lampe())) {
+        		gui.afficher(zoneCourante.descriptionLongue(inventaire));
+                gui.afficher();
+                gui.afficheImage(zoneCourante.nomImage());
+        		lancerEnigmeInfirmerie();
+        	} else {
+        		gui.afficher("La pièce semble trop sombre pour s'y aventurer.");
+                gui.afficher();
+                return;
+        	}
+        }
+        gui.afficher(zoneCourante.descriptionLongue(inventaire));
+        gui.afficher();
+        gui.afficheImage(zoneCourante.nomImage());
+
+        List<Personnage> persos = zoneCourante.getListePersonnage();
+        if (persos != null && !persos.isEmpty()) { 
+            for (Personnage p : persos) {
+                if (p.quete.status == 0) {
+                    p.quete.status = 1;
+                    afficherDialogueAvecDelai(p);
+                } else if (p.quete.status == 1) {
+                    System.out.println(inventaire.afficherInventaire());
+                    inventaire.retirerObjet(p.quete.getObjet());
+                    System.out.println(inventaire.afficherInventaire());
+                    inventaire.ajouterObjet(p.quete.getRecompense());
+                    gui.afficher("Vous avez donné un " + p.quete.getObjet().getNom());
+                    gui.afficher();
+                    gui.afficher("Frank : Bravo petit, tiens ta récompense.");
+                    gui.afficher();
+                    gui.afficher("Vous avez récupéré une " + p.quete.getRecompense().getNom());
+                    gui.afficher();
+                    System.out.println(inventaire.afficherInventaire());
                 }
             }
         }
     }
+
     
     private void afficherDialogueAvecDelai(Personnage p) {
         List<String> dialogue = p.dialogue;
         String nom = p.nom;
 
-        AtomicInteger index = new AtomicInteger(0);  // démarre à 0
+        AtomicInteger index = new AtomicInteger(0); 
         Timer timer = new Timer();
 
         timer.scheduleAtFixedRate(new TimerTask() {
@@ -299,19 +360,18 @@ public class Game {
             public void run() {
                 int i = index.get();
                 if (i >= dialogue.size()) {
-                    timer.cancel();  // on stoppe AVANT tout accès hors bornes
+                    timer.cancel(); 
                     return;
                 }
 
-                // On affiche dans le thread Swing
                 SwingUtilities.invokeLater(() -> {
                     gui.afficher(nom + " : " + dialogue.get(i));
                     gui.afficher();
                 });
 
-                index.incrementAndGet();  // passe à l’élément suivant
+                index.incrementAndGet(); 
             }
-        }, 3000, 3000);  // 0ms de délai initial, puis toutes les 1000ms
+        }, 3000, 3000);  
     }
     
     private void afficherTempsRestant() {
@@ -330,7 +390,6 @@ public class Game {
                 chrono.reduireTemps();
                 int temps = chrono.getTempsRestant();
 
-                // Mise à jour UI (thread-safe)
                 SwingUtilities.invokeLater(() -> {
                     gui.afficherTemps(formatTemps(temps));
                 });
@@ -340,9 +399,42 @@ public class Game {
                     gameOver();
                 }
             }
-        }, 1000, 1000); // Délai 1s, répété toutes les 1s
+        }, 1000, 1000);
     }
 
+    private void lancerEnigmeInfirmerie() {
+    	String reponse = JOptionPane.showInputDialog(null, 
+    	        "Sur l'armoire, une étiquette :\n\n" +
+    	        "1ᵉʳ flacon : 3 doses\n" +
+    	        "2ᵉ flacon : 6 doses\n" +
+    	        "3ᵉ flacon : 2 doses\n" +
+    	        "4ᵉ flacon : 4 doses\n\n" +
+    	        "Assemble les doses, dans un ordre, pour trouver le code.\n\n" +
+    	        "Quel est le code ?", 
+    	        "Énigme - Flacons de l'infirmerie", 
+    	        JOptionPane.QUESTION_MESSAGE);
+
+        if (reponse == null) {
+            gui.afficher("Vous abandonnez l'énigme.");
+            gui.afficher();
+            return;
+        }
+
+        try {
+            int codeSaisi = Integer.parseInt(reponse.trim());
+            if (codeSaisi == 2364) {
+                gui.afficher("Bravo ! Mais à quoi ce code peut bien vous servir ?");
+                gui.afficher();
+            } else {
+                gui.afficher("Mauvais code...");
+                gui.afficher();
+            }
+        } catch (NumberFormatException e) {
+            gui.afficher("Ce n'est pas un nombre valide !");
+            gui.afficher();
+        }
+    }
+    
     private String formatTemps(int secondes) {
         return String.format("%02d:%02d", secondes / 60, secondes % 60);
     }
@@ -353,6 +445,7 @@ public class Game {
     
     private void gameOver() {
         gui.afficher("\nTemps écoulé !");
+        gui.afficher();
     }
     
 	public static List<Sauvegarde> getSauvegardes(String username) {

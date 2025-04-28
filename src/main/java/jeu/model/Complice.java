@@ -4,7 +4,7 @@ import java.util.List;
 
 public class Complice extends Personnage {
 	public Complice(String nom) {
-		super(nom, new Quete(new Couteau(), new Plan()));
+		super(nom, new Quete(new Couteau(), new Carte()));
 		setupDialogue();
 	}
 	
