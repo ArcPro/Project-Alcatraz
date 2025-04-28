@@ -12,7 +12,7 @@ public class ConnexionDB {
     private static final String PASS     = System.getenv().getOrDefault("DB_PASS", "pass");
 
     private static final String URL = String.format(
-        "jdbc:mysql://%s:%s/%s?useSSL=false&serverTimezone=UTC",
+    	"jdbc:mysql://%s:%s/%s?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC",
         HOST, PORT, DB_NAME
     );
 

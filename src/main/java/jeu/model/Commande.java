@@ -7,6 +7,8 @@ public enum Commande {
 	SUD("S", "S (aller à la sortie sud)"), 
 	EST("E", "E (aller à la sortie est)"), 
 	OUEST("O", "O (aller à la sortie ouest)"), 
+	FOUILLER("F", "F (Fouiller un meuble)"), 
+	PRENDRE("P", "P (Prendre un objet)"), 
 	AIDE("?", "? (aide)"), 
 	QUITTER("Q", "Q (quitter)");
 

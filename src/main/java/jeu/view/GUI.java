@@ -14,6 +14,7 @@ public class GUI implements ActionListener
     private JTextField entree;
     private JTextArea texte;
     private JLabel image;
+    private JLabel chronoLabel;
 
     public GUI(Game j) {
         jeu = j;
@@ -29,13 +30,20 @@ public class GUI implements ActionListener
         afficher("\n");
     }
 
-   public void afficheImage( String nomImage) {
-	    URL imageURL = this.getClass().getClassLoader().getResource("images/" + nomImage);
-	   	if( imageURL != null ) {
-        	image.setIcon( new ImageIcon( imageURL ));
+    public void afficheImage(String nomImage) {
+        URL imageURL = this.getClass().getClassLoader().getResource("images/" + nomImage);
+        if (imageURL != null) {
+            ImageIcon originalIcon = new ImageIcon(imageURL);
+            Image originalImage = originalIcon.getImage();
+
+            Image scaledImage = originalImage.getScaledInstance(1000, 750, Image.SCALE_SMOOTH);
+
+            image.setIcon(new ImageIcon(scaledImage));
             fenetre.pack();
+        } else {
+            System.out.println("Image introuvable : " + nomImage);
         }
-   }
+    }
 
     public void enable(boolean ok) {
         entree.setEditable(ok);
@@ -45,41 +53,56 @@ public class GUI implements ActionListener
 
     private void creerGUI() {
         fenetre = new JFrame("Jeu");
-        
-        entree = new JTextField(34);
+
+        JPanel mainPanel = new JPanel(new BorderLayout());
+
+        image = new JLabel();
+        mainPanel.add(image, BorderLayout.NORTH);
 
         texte = new JTextArea();
         texte.setEditable(false);
         JScrollPane listScroller = new JScrollPane(texte);
         listScroller.setPreferredSize(new Dimension(200, 200));
-        listScroller.setMinimumSize(new Dimension(100,100));
+        mainPanel.add(listScroller, BorderLayout.CENTER);
 
-        JPanel panel = new JPanel();
-        image = new JLabel();
+        JPanel bottomPanel = new JPanel(new BorderLayout());
 
-        panel.setLayout(new BorderLayout());
-        panel.add(image, BorderLayout.NORTH);
-        panel.add(listScroller, BorderLayout.CENTER);
-        panel.add(entree, BorderLayout.SOUTH);
+        entree = new JTextField(34);
+        bottomPanel.add(entree, BorderLayout.CENTER);
 
-        fenetre.getContentPane().add(panel, BorderLayout.CENTER);
-        
+        chronoLabel = new JLabel("15:00", SwingConstants.RIGHT);
+        chronoLabel.setFont(new Font("Arial", Font.BOLD, 14));
+        chronoLabel.setBorder(BorderFactory.createEmptyBorder(0, 10, 0, 10));
+        bottomPanel.add(chronoLabel, BorderLayout.EAST);
+
+        mainPanel.add(bottomPanel, BorderLayout.SOUTH);
+
+        fenetre.getContentPane().add(mainPanel);
         fenetre.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-
         entree.addActionListener(this);
 
         fenetre.pack();
         fenetre.setVisible(true);
         entree.requestFocus();
+
     }
 
     public void actionPerformed(ActionEvent e) {
-        executerCommande();
+		executerCommande();
     }
 
     private void executerCommande() {
         String commandeLue = entree.getText();
         entree.setText("");
         jeu.traiterCommande( commandeLue);
+    }
+    
+    public void afficherTemps(String temps) {
+        chronoLabel.setText(temps);
+        if (temps.startsWith("00:")) {
+            chronoLabel.setForeground(Color.RED);
+        } else {
+            chronoLabel.setFont(chronoLabel.getFont().deriveFont(Font.BOLD));
+        }
     }
 }
